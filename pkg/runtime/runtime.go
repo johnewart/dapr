@@ -386,7 +386,8 @@ func (a *DaprRuntime) setupTracing(hostAddress string, tpStore tracerProviderSto
 	tpStore.RegisterResource(r)
 
 	// Register a trace sampler based on Sampling settings
-	tpStore.RegisterSampler(diagUtils.TraceSampler(a.globalConfig.Spec.TracingSpec.SamplingRate))
+	daprTraceSampler := diag.NewDaprTraceSampler(a.globalConfig.Spec.TracingSpec.SamplingRate)
+	tpStore.RegisterSampler(daprTraceSampler)
 
 	tpStore.RegisterTracerProvider()
 
