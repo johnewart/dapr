@@ -167,24 +167,15 @@ func TestStartInternalCallbackSpan(t *testing.T) {
 		require.Less(t, sampledCount, numTraces, "Expected to sample fewer than the total number of traces, but sampled all of them!")
 	})
 
-	t.Run("traceparent is provided with sampling flag = 0 and sampling is enabled (but not P=1.00)", func(t *testing.T) {
-		numTraces := 1000
-		sampledCount := runTraces(t, "test_trace", numTraces, "1.00", 0)
-		require.Greater(t, sampledCount, 0, "Expected to sample at least one span, but did not sample any!")
-		require.Equal(t, sampledCount, numTraces, "Expected to sample all traces (%d) but only sampled %d", numTraces, sampledCount)
-	})
-
 	t.Run("traceparent is provided with sampling flag = 0 and sampling is enabled (and P=1.00)", func(t *testing.T) {
 		numTraces := 1000
 		sampledCount := runTraces(t, "test_trace", numTraces, "1.00", 0)
-		require.Greater(t, sampledCount, 0, "Expected to sample at least one span, but did not sample any!")
 		require.Equal(t, sampledCount, numTraces, "Expected to sample all traces (%d) but only sampled %d", numTraces, sampledCount)
 	})
 
 	t.Run("traceparent is provided with sampling flag = 1 and sampling is enabled (but not P=1.00)", func(t *testing.T) {
 		numTraces := 1000
 		sampledCount := runTraces(t, "test_trace", numTraces, "0.00001", 1)
-		require.Greater(t, sampledCount, 0, "Expected to sample at least one span, but did not sample any!")
 		require.Equal(t, sampledCount, numTraces, "Expected to sample all traces (%d) but only sampled %d", numTraces, sampledCount)
 	})
 
