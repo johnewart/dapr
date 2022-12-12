@@ -38,6 +38,8 @@ type WorkflowEngine struct {
 
 	workflowActor *workflowActor
 	activityActor *activityActor
+
+	started bool
 }
 
 var (
@@ -50,12 +52,13 @@ func IsWorkflowRequest(path string) bool {
 }
 
 func NewWorkflowEngine() *WorkflowEngine {
-	be := NewActorBackend()
-	engine := &WorkflowEngine{
-		backend:       be,
-		workflowActor: NewWorkflowActor(be),
-		activityActor: NewActivityActor(be),
-	}
+	// TODO: Merge backend with workflow engine
+	engine := &WorkflowEngine{}
+	be := NewActorBackend(engine)
+	engine.backend = be
+	engine.activityActor = NewActivityActor(be)
+	engine.workflowActor = NewWorkflowActor(be)
+
 	return engine
 }
 
@@ -78,9 +81,18 @@ func (wfe *WorkflowEngine) ConfigureExecutor(factory func(be backend.Backend) ba
 	wfe.executor = factory(wfe.backend)
 }
 
-func (wfe *WorkflowEngine) SetActorRuntime(actorRuntime actors.Actors) {
+func (wfe *WorkflowEngine) SetActorRuntime(actorRuntime actors.Actors) error {
 	wfLogger.Info("configuring workflow engine with actors backend")
+	for actorType, actor := range wfe.InternalActors() {
+		if err := actorRuntime.RegisterInternalActor(context.TODO(), actorType, actor); err != nil {
+			return fmt.Errorf("failed to register workflow actor %s: %w", actorType, err)
+		}
+	}
+
+	wfLogger.Infof("workflow actors registered, workflow engine is ready")
 	wfe.backend.SetActorRuntime(actorRuntime)
+
+	return nil
 }
 
 // DisableActorCaching turns off the default caching done by the workflow and activity actors.
@@ -115,6 +127,11 @@ func (wfe *WorkflowEngine) SetActorReminderInterval(interval time.Duration) {
 }
 
 func (wfe *WorkflowEngine) Start(ctx context.Context) error {
+
+	if wfe.started {
+		return nil
+	}
+
 	if wfe.backend.actors == nil {
 		return errors.New("backend actor runtime is not configured")
 	} else if wfe.executor == nil {
@@ -131,6 +148,8 @@ func (wfe *WorkflowEngine) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to start workflow engine: %w", err)
 	}
 
+	wfe.started = true
 	wfLogger.Info("workflow engine started")
+
 	return nil
 }

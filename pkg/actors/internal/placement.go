@@ -14,6 +14,7 @@ limitations under the License.
 package internal
 
 import (
+	"fmt"
 	"net"
 	"sync"
 	"sync/atomic"
@@ -112,6 +113,19 @@ func NewActorPlacement(
 	}
 }
 
+// Register an actor type by adding it to the list of known actor types (if it's not already registered)
+// The placement tables will get updated when the next heartbeat fires
+func (p *ActorPlacement) AddHostedActorType(actorType string) error {
+	for _, t := range p.actorTypes {
+		if t == actorType {
+			return fmt.Errorf("actor type %s already registered", actorType)
+		}
+	}
+
+	p.actorTypes = append(p.actorTypes, actorType)
+	return nil
+}
+
 // Start connects placement service to register to membership and send heartbeat
 // to report the current member status periodically.
 func (p *ActorPlacement) Start() {
@@ -198,7 +212,6 @@ func (p *ActorPlacement) Start() {
 				Load:     1, // Not used yet
 				// Port is redundant because Name should include port number
 			}
-
 			err := p.client.send(&host)
 			if err != nil {
 				diag.DefaultMonitoring.ActorStatusReportFailed("send", "status")

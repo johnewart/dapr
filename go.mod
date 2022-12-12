@@ -72,6 +72,8 @@ require (
 	sigs.k8s.io/controller-runtime v0.13.0
 )
 
+require github.com/766b/go-outliner v0.0.0-20180511142203-fc6edecdadd7 // indirect
+
 require (
 	cloud.google.com/go v0.105.0 // indirect
 	cloud.google.com/go/compute v1.10.0 // indirect
